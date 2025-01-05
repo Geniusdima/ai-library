@@ -1,7 +1,5 @@
 #include "aimath.h"
 
-//all this code not work
-
 neuralNetwork * setupPerceptronNetwork(int inputCount, int outCount, int hlayersCount, int neuronHLCount)
 {
     neuralNetwork * net = (neuralNetwork*) malloc(sizeof(neuralNetwork));
@@ -44,7 +42,7 @@ neuron * setupNeurons(int neuronCount, int weightCount)
     {
         for (int j = 0; j< weightCount; j++)
         {
-            neurons[i].weight[j] = ((float) rand() / RAND_MAX) * 2 - 1;
+            neurons[i].weight[j] = (rand() % 2001 / 1000.0 - 1);
         }        
     }
 

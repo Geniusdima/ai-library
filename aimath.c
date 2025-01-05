@@ -38,8 +38,6 @@ float sigmoid(float x)
     return 1/(1+exp(-x));
 }
 
-//this code not work
-
 void forwardpropagation(neuralNetwork * net)
 {
     for (int i = 0; i < net->hiddenLayers[0].count; i++)
@@ -76,55 +74,62 @@ void forwardpropagation(neuralNetwork * net)
         net->outputLayer->neurons[i].value = ReLU(sum);
     }
 }
-// this code not work
+
+
 void backpropagation(neuralNetwork * net, float correctAnswers[], float learningRate)
 {
     forwardpropagation(net);
 
     float * deltaPrev = malloc(sizeof(float) * net->outputLayer->count);
-    float * deltaCurr;
-    for(int i = 0; i < net->outputLayer->count; i++)
-    {
-        deltaPrev[i] = net->outputLayer->neurons[i].value - correctAnswers[i];
+    if (deltaPrev == NULL) {
+        fprintf(stderr, "Memory allocation failed for deltaPrev.\n");
+        exit(EXIT_FAILURE);
     }
 
-    for (int i = net->count-1; i >= 0; i++)
+    for (int i = 0; i < net->outputLayer->count; i++) 
+    {
+        deltaPrev[i] = (net->outputLayer->neurons[i].value - correctAnswers[i]) * dReLU(net->outputLayer->neurons[i].value);
+
+    }
+
+    for (int i = net->count - 1; i >= 0; i--)
     {
         layer * curr = &net->hiddenLayers[i];
         layer * next;
-
-        deltaCurr = malloc(sizeof(float) * net->hiddenLayers[i].count);
-
-        if(i == net->count-1)
-        {
+        
+        if (i == net->count - 1) {
             next = net->outputLayer;
-        }
-        else
-        {
-            next = &net->hiddenLayers[i+1];
+        } else {
+            next = &net->hiddenLayers[i + 1];
         }
 
-        for(int j = 0; j < curr->count; j++)
+        float * deltaCurr = malloc(sizeof(float) * curr->count);
+        if (deltaCurr == NULL) {
+            fprintf(stderr, "Memory allocation failed for deltaCurr.\n");
+            free(deltaPrev);
+            exit(EXIT_FAILURE);
+        }
+
+         for (int j = 0; j < curr->count; j++)
         {
             float deltaSum = 0;
-            for(int k = 0; k < next->count; k++)
+            for (int k = 0; k < next->count; k++)
             {
-                deltaSum += next->neurons[k].weight[j] * deltaPrev[k];
+                deltaSum += next->neurons[k].weight[j] * deltaPrev[k]; 
             }
             deltaCurr[j] = deltaSum * dReLU(curr->neurons[j].value);
         }
 
-        for (int j = 0; j < next->count; j++)
+        for (int j = 0; j < next->count; j++) 
         {
-            for (int k = 0; k < curr->count; k++)
+            for (int k = 0; k < curr->count; k++) 
             {
-                next->neurons[j].weight[k] -= learningRate * deltaCurr[k] * curr->neurons[k].value;
+                next->neurons[j].weight[k] -= learningRate * deltaCurr[k] * curr->neurons[k].value; 
             }
         }
-        
 
         free(deltaPrev);
-        deltaPrev = deltaCurr;
+        deltaPrev = deltaCurr; 
     }
     free(deltaPrev);
 }
