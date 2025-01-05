@@ -25,6 +25,7 @@ float dSigmoid(float x)
 float MSE(neuralNetwork * net, float correctAnswers[])
 {
     float sum = 0;
+
     for (int i = 0; i < net->outputLayer->count; i++)
     {
         sum += pow(net->outputLayer->neurons[i].value - correctAnswers[i],2);
@@ -43,6 +44,7 @@ void forwardpropagation(neuralNetwork * net)
     for (int i = 0; i < net->hiddenLayers[0].count; i++)
     {
         float sum=0;
+
         for (int j = 0; j < net->inputLayer->count; j++)
         {
             sum += net->inputLayer->neurons[j].value * net->hiddenLayers[0].neurons[i].weight[j];
@@ -55,6 +57,7 @@ void forwardpropagation(neuralNetwork * net)
         for (int j = 0; j < net->hiddenLayers[i+1].count; j++)
         {
             float sum = 0;
+
             for(int k = 0; k < net->hiddenLayers[i].count; k++)
             {
                 sum += net->hiddenLayers[i].neurons[k].value * net->hiddenLayers[i+1].neurons[j].weight[k];
@@ -67,6 +70,7 @@ void forwardpropagation(neuralNetwork * net)
     for (int i = 0; i < net->outputLayer->count; i++)
     {
         float sum=0;
+
         for (int j = 0; j < net->hiddenLayers[net->count-1].count; j++)
         {
             sum += net->hiddenLayers[net->count-1].neurons[j].value * net->outputLayer->neurons[i].weight[j];
@@ -81,15 +85,10 @@ void backpropagation(neuralNetwork * net, float correctAnswers[], float learning
     forwardpropagation(net);
 
     float * deltaPrev = malloc(sizeof(float) * net->outputLayer->count);
-    if (deltaPrev == NULL) {
-        fprintf(stderr, "Memory allocation failed for deltaPrev.\n");
-        exit(EXIT_FAILURE);
-    }
 
     for (int i = 0; i < net->outputLayer->count; i++) 
     {
         deltaPrev[i] = (net->outputLayer->neurons[i].value - correctAnswers[i]) * dReLU(net->outputLayer->neurons[i].value);
-
     }
 
     for (int i = net->count - 1; i >= 0; i--)
@@ -97,20 +96,18 @@ void backpropagation(neuralNetwork * net, float correctAnswers[], float learning
         layer * curr = &net->hiddenLayers[i];
         layer * next;
         
-        if (i == net->count - 1) {
+        if (i == net->count - 1) 
+        {
             next = net->outputLayer;
-        } else {
+        } 
+        else 
+        {
             next = &net->hiddenLayers[i + 1];
         }
 
         float * deltaCurr = malloc(sizeof(float) * curr->count);
-        if (deltaCurr == NULL) {
-            fprintf(stderr, "Memory allocation failed for deltaCurr.\n");
-            free(deltaPrev);
-            exit(EXIT_FAILURE);
-        }
 
-         for (int j = 0; j < curr->count; j++)
+        for (int j = 0; j < curr->count; j++)
         {
             float deltaSum = 0;
             for (int k = 0; k < next->count; k++)
@@ -127,7 +124,6 @@ void backpropagation(neuralNetwork * net, float correctAnswers[], float learning
                 next->neurons[j].weight[k] -= learningRate * deltaCurr[k] * curr->neurons[k].value; 
             }
         }
-
         free(deltaPrev);
         deltaPrev = deltaCurr; 
     }
