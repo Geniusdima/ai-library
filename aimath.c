@@ -18,8 +18,7 @@ float dReLU(float x)
 
 float dSigmoid(float x)
 {
-    float sig = sigmoid(x);
-    return sig * (1 - sig);
+    return x * (1 - x);
 }
 
 float MSE(neuralNetwork * net, float correctAnswers[])
@@ -39,7 +38,7 @@ float sigmoid(float x)
     return 1/(1+exp(-x));
 }
 
-void forwardpropagation(neuralNetwork * net)
+void forwardpropagation(neuralNetwork * net, float (*act)(float x))
 {
     for (int i = 0; i < net->hiddenLayers[0].count; i++)
     {
@@ -49,7 +48,7 @@ void forwardpropagation(neuralNetwork * net)
         {
             sum += net->inputLayer->neurons[j].value * net->hiddenLayers[0].neurons[i].weight[j];
         }
-        net->hiddenLayers[0].neurons[i].value = ReLU(sum);
+        net->hiddenLayers[0].neurons[i].value = act(sum);
     }
 
     for (int i = 0; i < net->count-1; i++)
@@ -62,7 +61,7 @@ void forwardpropagation(neuralNetwork * net)
             {
                 sum += net->hiddenLayers[i].neurons[k].value * net->hiddenLayers[i+1].neurons[j].weight[k];
             }
-            net->hiddenLayers[i+1].neurons[j].value=ReLU(sum);
+            net->hiddenLayers[i+1].neurons[j].value=act(sum);
         }
     }
     
@@ -75,20 +74,30 @@ void forwardpropagation(neuralNetwork * net)
         {
             sum += net->hiddenLayers[net->count-1].neurons[j].value * net->outputLayer->neurons[i].weight[j];
         }
-        net->outputLayer->neurons[i].value = ReLU(sum);
+        net->outputLayer->neurons[i].value = act(sum);
     }
 }
 
 
-void backpropagation(neuralNetwork * net, float correctAnswers[], float learningRate)
+void backpropagation(neuralNetwork * net, float correctAnswers[], float learningRate,float (*act)(float x))
 {
-    forwardpropagation(net);
+    forwardpropagation(net,act);
 
-    float * deltaPrev = malloc(sizeof(float) * net->outputLayer->count);
+    float (*dact)(float x);
+    if(act == &sigmoid)
+    {
+        dact = dSigmoid;
+    }
+    else if(act == &ReLU)
+    {
+        dact = dReLU;
+    }
+
+    float * deltaPrev = (float*) malloc(sizeof(float) * net->outputLayer->count);
 
     for (int i = 0; i < net->outputLayer->count; i++) 
     {
-        deltaPrev[i] = (net->outputLayer->neurons[i].value - correctAnswers[i]) * dReLU(net->outputLayer->neurons[i].value);
+        deltaPrev[i] = (net->outputLayer->neurons[i].value - correctAnswers[i]) * dact(net->outputLayer->neurons[i].value);
     }
 
     for (int i = net->count - 1; i >= 0; i--)
@@ -105,7 +114,7 @@ void backpropagation(neuralNetwork * net, float correctAnswers[], float learning
             next = &net->hiddenLayers[i + 1];
         }
 
-        float * deltaCurr = malloc(sizeof(float) * curr->count);
+        float * deltaCurr = (float*) malloc(sizeof(float) * curr->count);
 
         for (int j = 0; j < curr->count; j++)
         {
@@ -114,14 +123,14 @@ void backpropagation(neuralNetwork * net, float correctAnswers[], float learning
             {
                 deltaSum += next->neurons[k].weight[j] * deltaPrev[k]; 
             }
-            deltaCurr[j] = deltaSum * dReLU(curr->neurons[j].value);
+            deltaCurr[j] = deltaSum * dact(curr->neurons[j].value);
         }
 
         for (int j = 0; j < next->count; j++) 
         {
             for (int k = 0; k < curr->count; k++) 
             {
-                next->neurons[j].weight[k] -= learningRate * deltaCurr[k] * curr->neurons[k].value; 
+                next->neurons[j].weight[k] += learningRate * deltaCurr[k] * curr->neurons[k].value; 
             }
         }
         free(deltaPrev);
