@@ -130,7 +130,7 @@ void backpropagation(neuralNetwork * net, float correctAnswers[], float learning
         {
             for (int k = 0; k < curr->count; k++) 
             {
-                next->neurons[j].weight[k] += learningRate * deltaCurr[k] * curr->neurons[k].value; 
+                next->neurons[j].weight[k] -= learningRate * deltaCurr[k] * curr->neurons[k].value; 
             }
         }
         free(deltaPrev);
