@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "aimath.h": "c",
+        "stdlib.h": "c",
+        "stdio.h": "c",
+        "bitset": "c",
+        "chrono": "c",
+        "algorithm": "c",
+        "__bit_reference": "c",
+        "unordered_map": "c"
+    }
+}
