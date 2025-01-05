@@ -1,2 +1,2 @@
 all:
-	g++ main.c aimath.c networkSetup.c -lm
+	gcc main.c aimath.c networkSetup.c -lm
